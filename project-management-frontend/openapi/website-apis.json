@@ -282,6 +282,50 @@
         }
       }
     },
+    "/api/projects/{id}/status": {
+      "put": {
+        "tags": [
+          "project-controller"
+        ],
+        "operationId": "updateProjectStatus",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProjectDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/teams": {
       "post": {
         "tags": [
@@ -415,6 +459,44 @@
         }
       }
     },
+    "/api/common/upload-profile-image": {
+      "post": {
+        "tags": [
+          "common-controller"
+        ],
+        "operationId": "uploadProfileImage",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/auth/register": {
       "post": {
         "tags": [
@@ -498,6 +580,77 @@
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/AuthResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/change-password": {
+      "post": {
+        "tags": [
+          "auth-controller"
+        ],
+        "operationId": "changePassword",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/users/upload": {
+      "post": {
+        "tags": [
+          "admin-controller"
+        ],
+        "operationId": "uploadUserCSV",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "required": [
+                  "file"
+                ],
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
                 }
               }
             }
@@ -790,6 +943,68 @@
         }
       }
     },
+    "/api/company/{companyId}": {
+      "get": {
+        "tags": [
+          "company-controller"
+        ],
+        "operationId": "getCompanyById",
+        "parameters": [
+          {
+            "name": "companyId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/CompanyDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ai/elaborate/{taskId}": {
+      "get": {
+        "tags": [
+          "ai-controller"
+        ],
+        "operationId": "elaborateTask",
+        "parameters": [
+          {
+            "name": "taskId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer",
+              "format": "int64"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiElaborationResponseDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/admin/analytics/summary": {
       "get": {
         "tags": [
@@ -876,10 +1091,48 @@
           }
         }
       }
+    },
+    "/api/common/delete-profile-image": {
+      "delete": {
+        "tags": [
+          "common-controller"
+        ],
+        "operationId": "deleteProfileImage",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
     "schemas": {
+      "CompanyDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "name": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string"
+          },
+          "joinCode": {
+            "type": "string"
+          }
+        }
+      },
       "UserDto": {
         "type": "object",
         "properties": {
@@ -899,6 +1152,16 @@
             "items": {
               "type": "string"
             }
+          },
+          "companyDto": {
+            "$ref": "#/components/schemas/CompanyDto"
+          },
+          "lastActive": {
+            "type": "string",
+            "format": "date"
+          },
+          "profileImageUrl": {
+            "type": "string"
           }
         }
       },
@@ -926,63 +1189,6 @@
             "items": {
               "$ref": "#/components/schemas/UserDto"
             }
-          },
-          "companyId": {
-            "type": "integer",
-            "format": "int64"
-          }
-        }
-      },
-      "TaskDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "title": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "dueDate": {
-            "type": "string",
-            "format": "date"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "TO_DO",
-              "IN_PROGRESS",
-              "REVIEW",
-              "DONE"
-            ]
-          },
-          "priority": {
-            "type": "string",
-            "enum": [
-              "LOW",
-              "MEDIUM",
-              "HIGH",
-              "CRITICAL"
-            ]
-          },
-          "projectId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "assigneeId": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "creatorId": {
-            "type": "integer",
-            "format": "int64"
           },
           "companyId": {
             "type": "integer",
@@ -1039,6 +1245,62 @@
             }
           },
           "taskCount": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "companyId": {
+            "type": "integer",
+            "format": "int64"
+          }
+        }
+      },
+      "TaskDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dueDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "TO_DO",
+              "IN_PROGRESS",
+              "REVIEW",
+              "DONE"
+            ]
+          },
+          "priority": {
+            "type": "string",
+            "enum": [
+              "LOW",
+              "MEDIUM",
+              "HIGH",
+              "CRITICAL"
+            ]
+          },
+          "project": {
+            "$ref": "#/components/schemas/ProjectDto"
+          },
+          "assigneeId": {
+            "type": "integer",
+            "format": "int64"
+          },
+          "creatorId": {
             "type": "integer",
             "format": "int64"
           },
@@ -1118,7 +1380,7 @@
       "LoginRequestDto": {
         "type": "object",
         "properties": {
-          "username": {
+          "email": {
             "type": "string"
           },
           "password": {
@@ -1163,6 +1425,20 @@
           "totalTeams": {
             "type": "integer",
             "format": "int64"
+          }
+        }
+      },
+      "AiElaborationResponseDto": {
+        "type": "object",
+        "properties": {
+          "elaboratedTask": {
+            "type": "string"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         }
       },
