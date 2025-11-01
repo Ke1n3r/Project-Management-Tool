@@ -19,8 +19,8 @@ public class AuthService {
     @Autowired
     PasswordEncoder passwordEncoder;
 
-    public boolean changePassword(String username, String oldPassword, String newPassword) {
-        Optional<User> optionalUser = userRepository.findByUsername(username);
+    public boolean changePassword(String email, String oldPassword, String newPassword) {
+        Optional<User> optionalUser = userRepository.findByEmail(email);
 
         if (optionalUser.isEmpty()) {
             return false;

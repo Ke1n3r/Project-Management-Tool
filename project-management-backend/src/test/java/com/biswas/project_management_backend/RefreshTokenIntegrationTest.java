@@ -72,7 +72,7 @@ class RefreshTokenIntegrationTest {
     @Order(2)
     void shouldRotateTokensOnLogin() throws Exception {
         LoginRequestDto loginRequest = new LoginRequestDto();
-        loginRequest.setUsername("testadmin");
+        loginRequest.setEmail("testadmin@test.com");
         loginRequest.setPassword("password123");
 
         String oldRefreshToken = refreshToken;
@@ -134,7 +134,7 @@ class RefreshTokenIntegrationTest {
         mockMvc.perform(post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -165,14 +165,14 @@ class RefreshTokenIntegrationTest {
         mockMvc.perform(post("/api/auth/refresh")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().is5xxServerError());
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
     @Order(7)
     void shouldMaintainOneTokenPerUser() throws Exception {
         LoginRequestDto loginRequest = new LoginRequestDto();
-        loginRequest.setUsername("testadmin");
+        loginRequest.setEmail("testadmin@test.com");
         loginRequest.setPassword("password123");
 
         // Login twice

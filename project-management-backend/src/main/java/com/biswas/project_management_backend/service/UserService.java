@@ -127,7 +127,6 @@ public class UserService {
         }
 
         String token = jwtUtil.generateToken(authRequest.getEmail(), claims);
-        String token = jwtUtil.generateToken(authRequest.getUsername(), claims);
 
         // Generate refresh token for the user
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());

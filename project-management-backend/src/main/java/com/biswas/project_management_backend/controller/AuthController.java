@@ -14,14 +14,11 @@ import com.biswas.project_management_backend.service.AuthService;
 import com.biswas.project_management_backend.service.RefreshTokenService;
 import com.biswas.project_management_backend.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -31,17 +28,11 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    UserService userService;
-
-    @Autowired
+    private final UserService userService;
     private final JwtUtil jwtUtil;
-
     private final RefreshTokenService refreshTokenService;
     private final UserDtoMapper userDtoMapper;
-
-    @Autowired
-    AuthService authService;
+    private final AuthService authService;
 
     @PostMapping("/register/company")
     public ResponseEntity<AuthResponseDto> register(@RequestBody RegisterCompanyRequestDto request) {
@@ -79,26 +70,30 @@ public class AuthController {
 
 
     @PostMapping("/refresh")
-    public ResponseEntity<AuthResponseDto> refreshToken(@RequestBody RefreshTokenRequestDto request) {
-        String requestRefreshToken = request.getRefreshToken();
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequestDto request) {
+        try {
+            String requestRefreshToken = request.getRefreshToken();
 
-        RefreshToken refreshToken = refreshTokenService.findByToken(requestRefreshToken)
-                .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
+            RefreshToken refreshToken = refreshTokenService.findByToken(requestRefreshToken)
+                    .orElseThrow(() -> new RuntimeException("Invalid refresh token"));
 
-        refreshToken = refreshTokenService.verifyExpiration(refreshToken);
+            refreshToken = refreshTokenService.verifyExpiration(refreshToken);
 
-        User user = refreshToken.getUser();
+            User user = refreshToken.getUser();
 
-        Map<String, Object> claims = new HashMap<>();
-        if (user.getCompany() != null) {
-            claims.put("companyId", user.getCompany().getId());
+            Map<String, Object> claims = new HashMap<>();
+            if (user.getCompany() != null) {
+                claims.put("companyId", user.getCompany().getId());
+            }
+            String newAccessToken = jwtUtil.generateToken(user.getEmail(), claims);
+
+            RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getId());
+
+            UserDto userDto = userDtoMapper.toDto(user);
+            return ResponseEntity.ok(new AuthResponseDto(newAccessToken, newRefreshToken.getToken(), userDto));
+        } catch (RuntimeException ex) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
         }
-        String newAccessToken = jwtUtil.generateToken(user.getUsername(), claims);
-
-        RefreshToken newRefreshToken = refreshTokenService.createRefreshToken(user.getId());
-
-        UserDto userDto = userDtoMapper.toDto(user);
-        return ResponseEntity.ok(new AuthResponseDto(newAccessToken, newRefreshToken.getToken(), userDto));
     }
 
     @PostMapping("/logout")
@@ -109,6 +104,11 @@ public class AuthController {
                 .ifPresent(token -> refreshTokenService.deleteByUserId(token.getUser().getId()));
 
         return ResponseEntity.ok("Logged out successfully");
+    }
+
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<String> handleRuntimeException(RuntimeException ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ex.getMessage());
     }
 }
 

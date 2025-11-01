@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import java.security.Key;
 import java.util.Date;
 import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 
 @Component
@@ -40,6 +41,7 @@ public class JwtUtil {
         return Jwts.builder()
                 .setClaims(extraClaims)
                 .setSubject(username)
+                .setId(UUID.randomUUID().toString()) // jti - unique token ID
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // 1h
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
