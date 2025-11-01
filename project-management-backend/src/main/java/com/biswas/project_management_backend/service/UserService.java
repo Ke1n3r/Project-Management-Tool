@@ -3,6 +3,7 @@ package com.biswas.project_management_backend.service;
 import com.biswas.project_management_backend.dto.*;
 import com.biswas.project_management_backend.dto.mapper.UserDtoMapper;
 import com.biswas.project_management_backend.model.Company;
+import com.biswas.project_management_backend.model.RefreshToken;
 import com.biswas.project_management_backend.model.Role;
 import com.biswas.project_management_backend.model.User;
 import com.biswas.project_management_backend.repository.CompanyRepository;
@@ -31,6 +32,7 @@ public class UserService {
     private final UserDtoMapper userDtoMapper;
     private final RoleRepository roleRepository;
     private final CompanyRepository companyRepository;
+    private final RefreshTokenService refreshTokenService;
 
     // ---------------- AUTH ----------------
     public AuthResponseDto registerCompanyWithAdmin(RegisterCompanyRequestDto request) {
@@ -61,9 +63,12 @@ public class UserService {
         claims.put("companyId", savedCompany.getId());
         String token = jwtUtil.generateToken(savedAdmin.getUsername(), claims);
 
+        // 5. Generate refresh token for the admin
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedAdmin.getId());
+
         UserDto userDto = userDtoMapper.toDto(savedAdmin);
 
-        return new AuthResponseDto(token, userDto);
+        return new AuthResponseDto(token, refreshToken.getToken(), userDto);
     }
 
 
@@ -96,9 +101,12 @@ public class UserService {
         if (company != null) claims.put("companyId", company.getId());
         String token = jwtUtil.generateToken(savedUser.getUsername(), claims);
 
+        // 5️⃣ Generate refresh token for the user
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser.getId());
+
         UserDto userDto = userDtoMapper.toDto(savedUser);
 
-        return new AuthResponseDto(token, userDto);
+        return new AuthResponseDto(token, refreshToken.getToken(), userDto);
     }
 
 
@@ -123,9 +131,13 @@ public class UserService {
         }
 
         String token = jwtUtil.generateToken(authRequest.getUsername(), claims);
+
+        // Generate refresh token for the user
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+
         UserDto userDto = userDtoMapper.toDto(user);
 
-        return new AuthResponseDto(token, userDto);
+        return new AuthResponseDto(token, refreshToken.getToken(), userDto);
     }
 
     // ---------------- CRUD ----------------
