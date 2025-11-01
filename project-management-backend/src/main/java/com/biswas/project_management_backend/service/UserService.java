@@ -61,7 +61,7 @@ public class UserService {
         // 4. Generate JWT with companyId in payload
         Map<String, Object> claims = new HashMap<>();
         claims.put("companyId", savedCompany.getId());
-        String token = jwtUtil.generateToken(savedAdmin.getUsername(), claims);
+        String token = jwtUtil.generateToken(savedAdmin.getEmail(), claims);
 
         // 5. Generate refresh token for the admin
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedAdmin.getId());
@@ -74,18 +74,15 @@ public class UserService {
 
     public AuthResponseDto registerUserWithJoinCode(RegisterRequestDto request) {
 
-        // 1️⃣ Assign default USER role
         Role userRole = roleRepository.findByName("USER")
                 .orElseThrow(() -> new RuntimeException("Default role USER not found"));
 
-        // 2️⃣ If joinCode provided, fetch company
         Company company = null;
         if (request.getJoinCode() != null && !request.getJoinCode().isEmpty()) {
             company = companyRepository.findByJoinCode(request.getJoinCode())
                     .orElseThrow(() -> new RuntimeException("Invalid join code"));
         }
 
-        // 3️⃣ Create user
         User user = User.builder()
                 .username(request.getUsername())
                 .email(request.getEmail())
@@ -96,10 +93,9 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
 
-        // 4️⃣ Generate JWT with companyId if available
         Map<String, Object> claims = new HashMap<>();
         if (company != null) claims.put("companyId", company.getId());
-        String token = jwtUtil.generateToken(savedUser.getUsername(), claims);
+        String token = jwtUtil.generateToken(savedUser.getEmail(), claims);
 
         // 5️⃣ Generate refresh token for the user
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(savedUser.getId());
@@ -114,12 +110,12 @@ public class UserService {
     public AuthResponseDto login(LoginRequestDto authRequest) {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
-                        authRequest.getUsername(),
+                        authRequest.getEmail(),
                         authRequest.getPassword()
                 )
         );
 
-        User user = userRepository.findByUsername(authRequest.getUsername())
+        User user = userRepository.findByEmail(authRequest.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setLastActiveDate(LocalDate.now());
@@ -130,6 +126,7 @@ public class UserService {
             claims.put("companyId", user.getCompany().getId());
         }
 
+        String token = jwtUtil.generateToken(authRequest.getEmail(), claims);
         String token = jwtUtil.generateToken(authRequest.getUsername(), claims);
 
         // Generate refresh token for the user
